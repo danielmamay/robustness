@@ -1,5 +1,7 @@
 # Robustness
 
+Robustness in machine learning experiments.
+
 ## Installation
 
 * Clone the repo and cd into it:
