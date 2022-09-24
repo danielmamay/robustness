@@ -1,17 +1,19 @@
 import torch
+import torch.nn.functional as F
 
-class PGD:
+class ProjectedGradientDescent:
     """
     Projected Gradient Descent (PGD) from 'Towards Deep Learning Models Resistant to Adversarial Attacks'
     [https://arxiv.org/abs/1706.06083]
     """
-    def __init__(self, epsilon=0.03, alpha=0.2, steps=7, clamp_values=(0, 1)):
+    def __init__(self, model, epsilon=0.03, alpha=0.2, steps=7, clamp_values=(0, 1)):
+        self.model = model
         self.epsilon = epsilon
         self.alpha = alpha
         self.steps = steps
         self.clamp_min, self.clamp_max = clamp_values
 
-    def generate(self, model, criterion, inputs, labels):
+    def generate(self, inputs, labels):
 
         adversarial_inputs = inputs.detach().clone()
         adversarial_inputs = inputs + torch.empty_like(inputs).uniform_(-self.epsilon, self.epsilon)
@@ -22,11 +24,11 @@ class PGD:
             adversarial_inputs.requires_grad = True
 
             # Zero gradient buffers
-            model.zero_grad()
+            self.model.zero_grad()
 
             # Forward pass
-            outputs = model(adversarial_inputs)
-            loss = criterion(outputs, labels)
+            outputs = self.model(adversarial_inputs)
+            loss = F.cross_entropy(outputs, labels)
 
             # Backward pass
             loss.backward()
@@ -38,6 +40,6 @@ class PGD:
             adversarial_inputs = adversarial_inputs.clamp(self.clamp_min, self.clamp_max)
 
             # Diff
-            predicted_labels = model(adversarial_inputs).argmax(dim=1)
+            predicted_labels = self.model(adversarial_inputs).argmax(dim=1)
         
         return adversarial_inputs, predicted_labels
