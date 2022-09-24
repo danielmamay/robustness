@@ -12,4 +12,5 @@
     conda create -n robustness python=3.9
     conda activate robustness
     pip install -r requirements.txt
+    pip install .
     ```
